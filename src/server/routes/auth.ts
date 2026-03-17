@@ -15,6 +15,7 @@ router.post('/register', async (req, res) => {
   }
 
   try {
+    console.log('Attempting to register user:', email);
     const hashedPassword = await bcrypt.hash(password, 10);
     
     // Create user
@@ -23,6 +24,7 @@ router.post('/register', async (req, res) => {
       [email, phone, hashedPassword]
     );
     const userId = userResult.rows[0].id;
+    console.log('User created with ID:', userId);
 
     // Create wallet for user
     const wallet = await createWallet();
@@ -30,14 +32,15 @@ router.post('/register', async (req, res) => {
       'INSERT INTO wallets (user_id, address, private_key) VALUES ($1, $2, $3)',
       [userId, wallet.address, wallet.privateKey]
     );
+    console.log('Wallet created for user:', userId);
 
     res.status(201).json({ message: 'User registered successfully' });
   } catch (error: any) {
+    console.error('Registration error detail:', error);
     if (error.message.includes('unique constraint')) {
       return res.status(400).json({ error: 'Email or phone already exists' });
     }
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error: ' + error.message });
   }
 });
 

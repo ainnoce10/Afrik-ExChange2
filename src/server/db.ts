@@ -4,6 +4,12 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+if (!process.env.DATABASE_URL) {
+  console.error('DATABASE_URL is not defined in .env or secrets!');
+} else {
+  console.log('DATABASE_URL is defined, attempting connection to Neon...');
+}
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
