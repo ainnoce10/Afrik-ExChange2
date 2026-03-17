@@ -18,7 +18,7 @@ import { fr } from 'date-fns/locale';
 
 interface Transaction {
   id: number;
-  user_id: number;
+  user_id: string;
   email: string;
   phone: string;
   type: 'buy' | 'sell';

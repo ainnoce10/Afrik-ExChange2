@@ -23,7 +23,7 @@ export async function initDb() {
   try {
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         email TEXT UNIQUE NOT NULL,
         phone TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
@@ -36,7 +36,7 @@ export async function initDb() {
 
       CREATE TABLE IF NOT EXISTS kyc_documents (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL REFERENCES users(id),
+        user_id UUID NOT NULL REFERENCES users(id),
         document_type TEXT NOT NULL,
         document_url TEXT NOT NULL,
         selfie_url TEXT NOT NULL,
@@ -57,7 +57,7 @@ export async function initDb() {
 
       CREATE TABLE IF NOT EXISTS transactions (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL REFERENCES users(id),
+        user_id UUID NOT NULL REFERENCES users(id),
         type TEXT NOT NULL, -- buy, sell
         asset TEXT NOT NULL, -- USDT, BTC, etc.
         local_currency TEXT NOT NULL, -- XOF, XAF
@@ -73,7 +73,7 @@ export async function initDb() {
 
       CREATE TABLE IF NOT EXISTS wallets (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL REFERENCES users(id),
+        user_id UUID NOT NULL REFERENCES users(id),
         address TEXT UNIQUE NOT NULL,
         private_key TEXT NOT NULL, -- Encrypted in production
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -81,7 +81,7 @@ export async function initDb() {
 
       CREATE TABLE IF NOT EXISTS admin_logs (
         id SERIAL PRIMARY KEY,
-        admin_id INTEGER NOT NULL REFERENCES users(id),
+        admin_id UUID NOT NULL REFERENCES users(id),
         action TEXT NOT NULL,
         details TEXT,
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
