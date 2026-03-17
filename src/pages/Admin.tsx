@@ -10,7 +10,8 @@ import {
   RefreshCw, 
   Save,
   ArrowUpRight,
-  ArrowDownLeft
+  ArrowDownLeft,
+  Search
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -54,6 +55,7 @@ const Admin: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [updatingRate, setUpdatingRate] = useState<number | null>(null);
   const [refreshingLive, setRefreshingLive] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchData = async () => {
     try {
@@ -115,6 +117,12 @@ const Admin: React.FC = () => {
       alert('Erreur lors de la validation');
     }
   };
+
+  const filteredTransactions = transactions.filter(tx => 
+    tx.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    tx.phone.includes(searchTerm) ||
+    tx.id.toString().includes(searchTerm)
+  );
 
   if (loading) return <div className="flex items-center justify-center h-64">Chargement de l'administration...</div>;
 
@@ -217,8 +225,18 @@ const Admin: React.FC = () => {
 
       {/* All Transactions Table */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100">
+        <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h3 className="text-lg font-bold text-slate-900">Toutes les transactions</h3>
+          <div className="relative w-full md:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input 
+              type="text"
+              placeholder="Rechercher (Email, Tel, ID)..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all text-sm"
+            />
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
@@ -234,7 +252,7 @@ const Admin: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {transactions.map((tx) => (
+              {filteredTransactions.map((tx) => (
                 <tr key={tx.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="text-sm font-bold text-slate-900">{tx.email}</div>
