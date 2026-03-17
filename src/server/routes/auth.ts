@@ -18,18 +18,22 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     
     // Create user
-    const stmt = db.prepare('INSERT INTO users (email, phone, password) VALUES (?, ?, ?)');
-    const result = stmt.run(email, phone, hashedPassword);
-    const userId = result.lastInsertRowid as number;
+    const userResult = await db.query(
+      'INSERT INTO users (email, phone, password) VALUES ($1, $2, $3) RETURNING id',
+      [email, phone, hashedPassword]
+    );
+    const userId = userResult.rows[0].id;
 
     // Create wallet for user
     const wallet = await createWallet();
-    db.prepare('INSERT INTO wallets (user_id, address, private_key) VALUES (?, ?, ?)')
-      .run(userId, wallet.address, wallet.privateKey);
+    await db.query(
+      'INSERT INTO wallets (user_id, address, private_key) VALUES ($1, $2, $3)',
+      [userId, wallet.address, wallet.privateKey]
+    );
 
     res.status(201).json({ message: 'User registered successfully' });
   } catch (error: any) {
-    if (error.message.includes('UNIQUE constraint failed')) {
+    if (error.message.includes('unique constraint')) {
       return res.status(400).json({ error: 'Email or phone already exists' });
     }
     console.error('Registration error:', error);
@@ -41,7 +45,8 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email) as any;
+    const userResult = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    const user = userResult.rows[0] as any;
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }

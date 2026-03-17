@@ -39,16 +39,6 @@ export async function updateRatesFromLive() {
     const assets = Object.keys(ASSET_MAP);
     const currencies = ['XOF', 'XAF'];
 
-    const upsertStmt = db.prepare(`
-      INSERT INTO rates (asset, local_currency, base_rate, buy_rate, sell_rate, updated_at)
-      VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-      ON CONFLICT(asset, local_currency) DO UPDATE SET
-        base_rate = excluded.base_rate,
-        buy_rate = excluded.buy_rate,
-        sell_rate = excluded.sell_rate,
-        updated_at = CURRENT_TIMESTAMP
-    `);
-
     let updatedCount = 0;
     for (const asset of assets) {
       const cgId = ASSET_MAP[asset];
@@ -60,7 +50,15 @@ export async function updateRatesFromLive() {
           const buyRate = Math.round(baseRate * MARGIN_BUY * 100) / 100;
           const sellRate = Math.round(baseRate * MARGIN_SELL * 100) / 100;
 
-          upsertStmt.run(asset, currency, baseRate, buyRate, sellRate);
+          await db.query(`
+            INSERT INTO rates (asset, local_currency, base_rate, buy_rate, sell_rate, updated_at)
+            VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+            ON CONFLICT(asset, local_currency) DO UPDATE SET
+              base_rate = EXCLUDED.base_rate,
+              buy_rate = EXCLUDED.buy_rate,
+              sell_rate = EXCLUDED.sell_rate,
+              updated_at = CURRENT_TIMESTAMP
+          `, [asset, currency, baseRate, buyRate, sellRate]);
           updatedCount++;
         }
       } else {

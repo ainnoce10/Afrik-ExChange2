@@ -5,18 +5,18 @@ import { authenticateToken, AuthRequest } from '../middleware/auth.ts';
 const router = express.Router();
 
 // Get Profile
-router.get('/profile', authenticateToken, (req: AuthRequest, res) => {
+router.get('/profile', authenticateToken, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
   try {
-    const user = db.prepare('SELECT id, email, phone, role, kyc_status, is_verified, created_at FROM users WHERE id = ?').get(userId);
-    res.json(user);
+    const result = await db.query('SELECT id, email, phone, role, kyc_status, is_verified, created_at FROM users WHERE id = $1', [userId]);
+    res.json(result.rows[0]);
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Upload KYC Documents (Mocking file upload logic)
-router.post('/kyc', authenticateToken, (req: AuthRequest, res) => {
+router.post('/kyc', authenticateToken, async (req: AuthRequest, res) => {
   const userId = req.user?.id;
   const { document_type, document_url, selfie_url } = req.body;
 
@@ -25,13 +25,12 @@ router.post('/kyc', authenticateToken, (req: AuthRequest, res) => {
   }
 
   try {
-    const stmt = db.prepare(`
+    await db.query(`
       INSERT INTO kyc_documents (user_id, document_type, document_url, selfie_url, status)
-      VALUES (?, ?, ?, ?, 'pending')
-    `);
-    stmt.run(userId, document_type, document_url, selfie_url);
+      VALUES ($1, $2, $3, $4, 'pending')
+    `, [userId, document_type, document_url, selfie_url]);
 
-    db.prepare('UPDATE users SET kyc_status = "pending" WHERE id = ?').run(userId);
+    await db.query("UPDATE users SET kyc_status = 'pending' WHERE id = $1", [userId]);
 
     res.json({ message: 'KYC documents submitted successfully' });
   } catch (error) {

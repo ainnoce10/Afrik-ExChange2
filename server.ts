@@ -19,13 +19,14 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Initialize Database
-initDb();
-
-// Initial Rates Update
-updateRatesFromLive();
-
+// Start Server
 async function startServer() {
+  // Initialize Database
+  await initDb();
+
+  // Initial Rates Update
+  updateRatesFromLive();
+
   const app = express();
   const PORT = 3000;
 

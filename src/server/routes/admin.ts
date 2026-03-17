@@ -13,8 +13,8 @@ router.use(authenticateToken, isAdmin);
 router.post('/rates/refresh', async (req, res) => {
   try {
     await updateRatesFromLive();
-    const rates = db.prepare('SELECT * FROM rates').all();
-    res.json({ message: 'Rates refreshed successfully', rates });
+    const result = await db.query('SELECT * FROM rates');
+    res.json({ message: 'Rates refreshed successfully', rates: result.rows });
   } catch (error) {
     res.status(500).json({ error: 'Failed to refresh rates' });
   }
@@ -23,13 +23,13 @@ router.post('/rates/refresh', async (req, res) => {
 // Get all transactions
 router.get('/transactions', async (req, res) => {
   try {
-    const transactions = db.prepare(`
+    const result = await db.query(`
       SELECT t.*, u.email, u.phone 
       FROM transactions t 
       JOIN users u ON t.user_id = u.id 
       ORDER BY t.created_at DESC
-    `).all();
-    res.json(transactions);
+    `);
+    res.json(result.rows);
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -39,8 +39,8 @@ router.get('/transactions', async (req, res) => {
 router.post('/rates', async (req, res) => {
   const { asset, local_currency, buy_rate, sell_rate } = req.body;
   try {
-    db.prepare('UPDATE rates SET buy_rate = ?, sell_rate = ?, updated_at = CURRENT_TIMESTAMP WHERE asset = ? AND local_currency = ?')
-      .run(buy_rate, sell_rate, asset, local_currency);
+    await db.query('UPDATE rates SET buy_rate = $1, sell_rate = $2, updated_at = CURRENT_TIMESTAMP WHERE asset = $3 AND local_currency = $4',
+      [buy_rate, sell_rate, asset, local_currency]);
     res.json({ message: 'Rates updated successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
@@ -53,19 +53,21 @@ router.post('/transactions/:id/validate', async (req, res) => {
   const { status, tx_hash } = req.body; // status: completed, cancelled
 
   try {
-    const transaction = db.prepare('SELECT * FROM transactions WHERE id = ?').get(id) as any;
+    const transactionResult = await db.query('SELECT * FROM transactions WHERE id = $1', [id]);
+    const transaction = transactionResult.rows[0] as any;
     if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
 
     if (status === 'completed' && transaction.type === 'buy' && transaction.asset === 'USDT') {
       // If it's a buy, we need to send USDT to user (only if USDT for now)
-      const userWallet = db.prepare('SELECT address FROM wallets WHERE user_id = ?').get(transaction.user_id) as any;
+      const userWalletResult = await db.query('SELECT address FROM wallets WHERE user_id = $1', [transaction.user_id]);
+      const userWallet = userWalletResult.rows[0] as any;
       if (userWallet) {
         // Automation logic would go here
       }
     }
 
-    db.prepare('UPDATE transactions SET status = ?, blockchain_tx_hash = ? WHERE id = ?')
-      .run(status, tx_hash || transaction.blockchain_tx_hash, id);
+    await db.query('UPDATE transactions SET status = $1, blockchain_tx_hash = $2 WHERE id = $3',
+      [status, tx_hash || transaction.blockchain_tx_hash, id]);
 
     res.json({ message: `Transaction ${status}` });
   } catch (error) {
@@ -77,16 +79,22 @@ router.post('/transactions/:id/validate', async (req, res) => {
 // Get stats
 router.get('/stats', async (req, res) => {
   try {
-    const totalVolume = db.prepare('SELECT SUM(amount_local) as volume FROM transactions WHERE status = "completed"').get() as any;
-    const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get() as any;
-    const pendingTransactions = db.prepare('SELECT COUNT(*) as count FROM transactions WHERE status = "pending"').get() as any;
+    const totalVolumeResult = await db.query("SELECT SUM(amount_local) as volume FROM transactions WHERE status = 'completed'");
+    const totalVolume = totalVolumeResult.rows[0] as any;
+    
+    const userCountResult = await db.query('SELECT COUNT(*) as count FROM users');
+    const userCount = userCountResult.rows[0] as any;
+    
+    const pendingTransactionsResult = await db.query("SELECT COUNT(*) as count FROM transactions WHERE status = 'pending'");
+    const pendingTransactions = pendingTransactionsResult.rows[0] as any;
 
     res.json({
-      volume: totalVolume.volume || 0,
-      users: userCount.count,
-      pending: pendingTransactions.count
+      volume: parseFloat(totalVolume.volume) || 0,
+      users: parseInt(userCount.count),
+      pending: parseInt(pendingTransactions.count)
     });
   } catch (error) {
+    console.error('Stats error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -94,8 +102,8 @@ router.get('/stats', async (req, res) => {
 // Export transactions to CSV
 router.get('/export', async (req, res) => {
   try {
-    const transactions = db.prepare('SELECT * FROM transactions').all();
-    const csv = jsonToCsv(transactions);
+    const result = await db.query('SELECT * FROM transactions');
+    const csv = jsonToCsv(result.rows);
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename=transactions.csv');
     res.status(200).send(csv);
