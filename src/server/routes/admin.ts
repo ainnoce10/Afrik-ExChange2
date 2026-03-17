@@ -1,9 +1,9 @@
 import express from 'express';
-import db from '../db';
-import { authenticateToken, isAdmin, AuthRequest } from '../middleware/auth';
-import { sendUsdt } from '../services/tronService';
-import { updateRatesFromLive } from '../services/rateService';
-import { jsonToCsv } from '../utils/export';
+import db from '../db.js';
+import { authenticateToken, isAdmin, AuthRequest } from '../middleware/auth.js';
+import { sendUsdt } from '../services/tronService.js';
+import { updateRatesFromLive } from '../services/rateService.js';
+import { jsonToCsv } from '../utils/export.js';
 
 const router = express.Router();
 
