@@ -51,8 +51,21 @@ async function startServer() {
   app.use('/api/user', userRoutes);
   app.use('/api/webhooks', webhookRoutes);
 
-  app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', message: 'Afrik-ExChange API is running' });
+  app.get('/api/health', async (req, res) => {
+    try {
+      const dbCheck = await initDb(); // Re-run init to check connection
+      res.json({ 
+        status: 'ok', 
+        message: 'Afrik-ExChange API is running',
+        database: 'connected'
+      });
+    } catch (err: any) {
+      res.status(500).json({ 
+        status: 'error', 
+        message: 'Database connection failed',
+        error: err.message
+      });
+    }
   });
 
   // Vite middleware for development
