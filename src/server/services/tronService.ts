@@ -1,5 +1,5 @@
 import { TronWeb } from 'tronweb';
-import { BLOCKCHAIN_CONFIG, getNetworkUrl, getUsdtContractAddress } from '../config/blockchain.ts';
+import { BLOCKCHAIN_CONFIG, getNetworkUrl, getUsdtContractAddress } from '../config/blockchain';
 
 // Initialize TronWeb
 const fullHost = getNetworkUrl();

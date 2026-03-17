@@ -1,6 +1,6 @@
 import express from 'express';
-import db from '../db.ts';
-import { checkTransactionStatus } from '../services/tronService.ts';
+import db from '../db';
+import { checkTransactionStatus } from '../services/tronService';
 
 const router = express.Router();
 

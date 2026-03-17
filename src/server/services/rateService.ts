@@ -1,5 +1,5 @@
 import axios from 'axios';
-import db from '../db.ts';
+import db from '../db';
 
 const ASSET_MAP: Record<string, string> = {
   'BTC': 'bitcoin',

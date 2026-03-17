@@ -6,13 +6,13 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
-import { initDb } from './src/server/db.ts';
-import { updateRatesFromLive } from './src/server/services/rateService.ts';
-import authRoutes from './src/server/routes/auth.ts';
-import transactionRoutes from './src/server/routes/transactions.ts';
-import adminRoutes from './src/server/routes/admin.ts';
-import userRoutes from './src/server/routes/user.ts';
-import webhookRoutes from './src/server/routes/webhooks.ts';
+import { initDb } from './src/server/db';
+import { updateRatesFromLive } from './src/server/services/rateService';
+import authRoutes from './src/server/routes/auth';
+import transactionRoutes from './src/server/routes/transactions';
+import adminRoutes from './src/server/routes/admin';
+import userRoutes from './src/server/routes/user';
+import webhookRoutes from './src/server/routes/webhooks';
 
 dotenv.config();
 
@@ -83,7 +83,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Only listen if not on Vercel
 if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
-  const PORT = process.env.PORT || 3000;
+  const PORT = Number(process.env.PORT) || 3000;
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
   });
