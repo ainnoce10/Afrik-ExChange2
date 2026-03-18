@@ -1,7 +1,7 @@
 import express from 'express';
-import db from '../db';
-import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { getUsdtBalance } from '../services/tronService';
+import db from '../db.js';
+import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { getUsdtBalance } from '../services/tronService.js';
 
 const router = express.Router();
 
