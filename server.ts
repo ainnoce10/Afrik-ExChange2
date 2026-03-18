@@ -6,13 +6,13 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
-import { initDb } from './src/server/db.js';
-import { updateRatesFromLive } from './src/server/services/rateService.js';
-import authRoutes from './src/server/routes/auth.js';
-import transactionRoutes from './src/server/routes/transactions.js';
-import adminRoutes from './src/server/routes/admin.js';
-import userRoutes from './src/server/routes/user.js';
-import webhookRoutes from './src/server/routes/webhooks.js';
+import { initDb } from './src/server/db';
+import { updateRatesFromLive } from './src/server/services/rateService';
+import authRoutes from './src/server/routes/auth';
+import transactionRoutes from './src/server/routes/transactions';
+import adminRoutes from './src/server/routes/admin';
+import userRoutes from './src/server/routes/user';
+import webhookRoutes from './src/server/routes/webhooks';
 
 dotenv.config();
 

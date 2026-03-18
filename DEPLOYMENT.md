@@ -41,4 +41,4 @@ server {
 
 ## 5. Maintenance
 - Les logs sont accessibles via `docker logs`.
-- La base de données SQLite est stockée dans `database.sqlite` (pensez à faire des backups réguliers).
+- La base de données est hébergée sur **Neon (PostgreSQL)**. Pensez à faire des backups réguliers via le dashboard Neon.
